@@ -2,51 +2,34 @@ require 'rubygems'
 require 'nokogiri'
 require 'open-uri'
 
-# URL de la page cible
-PAGE_URL = "https://coinmarketcap.com/all/views/all/"
+URL = "https://coinmarketcap.com/all/views/all/"
 
-# Méthode de récupération des données de la page dont on passe l'URL
 def get_data(url)
-		return page = Nokogiri::HTML(open("https://coinmarketcap.com/all/views/all/"))
+	return page = Nokogiri::HTML(open(url))
 end
 
-# Méthode de récupération des cryptos et de leurs valeurs
-def get_currencies(page)	
-	# Définition de l'array qui sera return
+def get_currencies(page)
+	# Initialisation des variables
 	a = []
-	# Variable itérative
-	i = 0
+	hash_crypto = {}
 
-	# Determiner le nombre de cryptos à récupérer
-	currency_nb = page.css('td.currency-name span.currency-symbol a').length
-
-	# Comme expliqué dans le perform, je limite le tableau à 5 résultats sinon le scrapping et beaucoup trop long
-	# Sinon, il suffirait d'ouvrir la boucle comme cela : currency_nb.times do
-	5.times do 
-		# On récupère le symbole de la crypto
-		currency_name =  page.css('td.currency-name span.currency-symbol a')[i].text
-		# On récupère sa valeur
-		currency_price =  page.css('a.price')[i]["data-usd"]
-		# On créé un hash
-		h = {currency_name => currency_price}
-		# On ajoute le hash au tableu
-		a.push(h)
-		# itération
-		i += 1
+	page.xpath('//tbody//tr').each do |node|
+		crypto_name = node.css('span.currency-symbol a').text
+		crypto_price = node.css('a.price').text
+		# Gestion du cas où il y aurait une donnée vide au milieu du tableau 
+		if crypto_name != "" && crypto_price != ""
+		 hash_crypto = {crypto_name => crypto_price}
+		 a << hash_crypto
+		end
 	end
-	#On renvoi le tableau
+
 	return a
+
 end
+
 
 def perform
-	puts "==== DISCLAIMER ===="
-	puts " Je ne remonte ici dans mon perform que 5 crypto VOLONTAIREMENT"
-	puts "Le temps pour extraire les 2109 cryptos du site serait beaucoup trop long"
-	puts "(voir le contenu du programme pour où j'explique la ligne à modifier pour scrapper toutes les cryptos"
-	puts "===================="
-	# Récupération des données de la page
-	page = get_data(PAGE_URL)
-	# récupération des données cryptos
+	page = get_data(URL)
 	puts get_currencies(page)
 end
 
